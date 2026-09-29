@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Keep user PDFs and generated output out of the public repository.
+*.pdf
+
+# Reference pages are user-provided and may be copyrighted.
+credit_images/*
+!credit_images/README.md

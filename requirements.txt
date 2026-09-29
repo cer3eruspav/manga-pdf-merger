@@ -1,0 +1,5 @@
+pypdf>=3.9,<4
+send2trash>=1.8
+reportlab>=3.6
+pillow>=9.1
+pdf2image>=1.16
