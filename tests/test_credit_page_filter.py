@@ -207,5 +207,32 @@ class CreditPageFilterTests(unittest.TestCase):
             self.assertEqual(os.listdir(directory), ["source.pdf"])
 
 
+class MangaFilenameParsingTests(unittest.TestCase):
+    def test_numeric_episode_does_not_treat_special_in_title_as_special_marker(self):
+        title = (
+            "[Chinjao Girl. (Special G)] 【Hihou】 Kaisha No Iki Okure BBA "
+            "Haramaseta -เสน่ห์รักสาวใหญ่-"
+        )
+
+        parsed = [
+            merge_manga.parse_manga_info(f"{title} {episode:02}.pdf")
+            for episode in range(1, 9)
+        ]
+
+        self.assertEqual({item[0] for item in parsed}, {title.rstrip("-")})
+        self.assertEqual([item[1] for item in parsed], list(map(float, range(1, 9))))
+        self.assertTrue(all(not item[2] for item in parsed))
+
+    def test_special_marker_at_end_is_still_detected(self):
+        self.assertEqual(
+            merge_manga.parse_manga_info("Series Special.pdf"),
+            ("Series", None, True, ""),
+        )
+        self.assertEqual(
+            merge_manga.parse_manga_info("Series ตอนพิเศษ.pdf"),
+            ("Series", None, True, ""),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

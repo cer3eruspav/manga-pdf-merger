@@ -215,16 +215,17 @@ def parse_manga_info(filename_full):
     name_without_ext = os.path.splitext(filename_full)[0]
 
     is_special = False
-    lower_fn = name_without_ext.lower()
-    if "ตอนพิเศษ" in lower_fn or re.search(r'\bextra\b', lower_fn) or re.search(r'\bspecial\b', lower_fn):
-        is_special = True
+    special_pattern = (
+        r'ตอนพิเศษ|(?<!\w)(?:special|extra)(?!\w)(?:\s*[-_]\s*.*)?$'
+    )
+    is_special = re.search(special_pattern, name_without_ext, re.IGNORECASE) is not None
 
     base_title = name_without_ext
     ep_num = None
     sub_title = ""
 
     if is_special:
-        parts = re.split(r'ตอนพิเศษ|\bspecial\b|\bextra\b', name_without_ext, flags=re.IGNORECASE)
+        parts = re.split(special_pattern, name_without_ext, flags=re.IGNORECASE)
         base_title = parts[0].strip().rstrip('-').strip()
     else:
         # รูปแบบที่ 1: มีคำบอกตอน ไม่จำเป็นต้องมีขีดคั่น (แก้ปัญหาตาบอดแล้ว!)
