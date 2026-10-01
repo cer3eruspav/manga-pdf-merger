@@ -219,7 +219,9 @@ class MangaFilenameParsingTests(unittest.TestCase):
             for episode in range(1, 9)
         ]
 
-        self.assertEqual({item[0] for item in parsed}, {title.rstrip("-")})
+        expected_title = title.replace("Special ", "")
+        self.assertEqual({item[0] for item in parsed}, {expected_title.rstrip("-")})
+        self.assertTrue(all("special" not in item[0].lower() for item in parsed))
         self.assertEqual([item[1] for item in parsed], list(map(float, range(1, 9))))
         self.assertTrue(all(not item[2] for item in parsed))
 

@@ -270,6 +270,10 @@ def parse_manga_info(filename_full):
         else:
             base_title = eng_part
 
+    base_title = re.sub(r'\bspecial\b', '', base_title, flags=re.IGNORECASE)
+    base_title = re.sub(r'\(\s+', '(', base_title)
+    base_title = re.sub(r'\s+', ' ', base_title).strip()
+
     # ล้างขยะท้ายชื่ออีกหนึ่งรอบ ป้องกันขีดหรือคำตกค้าง
     base_title = re.sub(r'\s+(?:ตอนที่|ตอน|chapter|ep)\s*$', '', base_title, flags=re.IGNORECASE).strip().rstrip('-').strip()
 
