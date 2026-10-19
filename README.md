@@ -28,6 +28,7 @@ Matching is image-based rather than text-based, so it may not recognize credit p
 
 ```powershell
 py -3 -m pip install -r requirements.txt```
+
   <img width="1024" height="572" alt="สร้างshortcut 001" src="https://github.com/user-attachments/assets/b30d880b-4aab-4221-b84d-77be36d5009f" />
   <img width="1024" height="618" alt="สร้างshortcut 002" src="https://github.com/user-attachments/assets/a5773914-c775-4588-b4cb-c95e52d952c7" />
   <img width="1024" height="507" alt="สร้างshortcut 003" src="https://github.com/user-attachments/assets/868357d8-a882-4ecb-97d2-b952bd530873" />
