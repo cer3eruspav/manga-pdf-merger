@@ -27,15 +27,13 @@ Matching is image-based rather than text-based, so it may not recognize credit p
 4. Open PowerShell inside the program directory and install the required dependencies:
 
 ```powershell
-py -3 -m pip install -r requirements.txt
-
-
-<img width="1024" height="572" alt="สร้างshortcut 001" src="https://github.com/user-attachments/assets/b30d880b-4aab-4221-b84d-77be36d5009f" />
-<img width="1024" height="618" alt="สร้างshortcut 002" src="https://github.com/user-attachments/assets/a5773914-c775-4588-b4cb-c95e52d952c7" />
-<img width="1024" height="507" alt="สร้างshortcut 003" src="https://github.com/user-attachments/assets/868357d8-a882-4ecb-97d2-b952bd530873" />
-<img width="1024" height="373" alt="สร้างshortcut 004" src="https://github.com/user-attachments/assets/33f37eee-a10a-4f10-92d7-a210dd91d36b" />
-<img width="809" height="517" alt="001" src="https://github.com/user-attachments/assets/a279c599-961c-4e8c-8119-0ab046381b12" />
-<img width="472" height="327" alt="002" src="https://github.com/user-attachments/assets/b095569b-cac2-435a-8b18-4ead4ca5f691" />
-<img width="1310" height="816" alt="003" src="https://github.com/user-attachments/assets/3a1b09ba-3419-4554-88d6-e365f6809706" />
-<img width="1024" height="378" alt="004" src="https://github.com/user-attachments/assets/bebc1fb8-fdf6-403c-a506-64cd8f96fd1b" />
+py -3 -m pip install -r requirements.txt```
+  <img width="1024" height="572" alt="สร้างshortcut 001" src="https://github.com/user-attachments/assets/b30d880b-4aab-4221-b84d-77be36d5009f" />
+  <img width="1024" height="618" alt="สร้างshortcut 002" src="https://github.com/user-attachments/assets/a5773914-c775-4588-b4cb-c95e52d952c7" />
+  <img width="1024" height="507" alt="สร้างshortcut 003" src="https://github.com/user-attachments/assets/868357d8-a882-4ecb-97d2-b952bd530873" />
+  <img width="1024" height="373" alt="สร้างshortcut 004" src="https://github.com/user-attachments/assets/33f37eee-a10a-4f10-92d7-a210dd91d36b" />
+  <img width="809" height="517" alt="001" src="https://github.com/user-attachments/assets/a279c599-961c-4e8c-8119-0ab046381b12" />
+  <img width="472" height="327" alt="002" src="https://github.com/user-attachments/assets/b095569b-cac2-435a-8b18-4ead4ca5f691" />
+  <img width="1310" height="816" alt="003" src="https://github.com/user-attachments/assets/3a1b09ba-3419-4554-88d6-e365f6809706" />
+  <img width="1024" height="378" alt="004" src="https://github.com/user-attachments/assets/bebc1fb8-fdf6-403c-a506-64cd8f96fd1b" />
 
