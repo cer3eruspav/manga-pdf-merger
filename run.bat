@@ -1,24 +1,24 @@
 @echo off
 chcp 65001 >nul
 
-:: ตรวจสอบว่ามีการลากไฟล์มาวางจริงไหม
+:: Check if files were dragged and dropped
 if "%~1"=="" goto wait_drop
 
-:: ส่งรายชื่อไฟล์ทั้งหมดไปยัง Python แบบครอบเครื่องหมายคำพูดป้องกันพาธหลุด
+:: Pass all file paths to Python with quotes to prevent path breaking
 py -3 "%~dp0merge_manga.py" %*
 
 :wait_drop
 echo.
 echo --------------------------------------------------
-echo  ประมวลผลเสร็จแล้ว! กำลังนับถอยหลังเพื่อปิดหน้าต่าง...
-echo  (หากลากไฟล์ชุดใหม่มาวางตอนนี้ จะทำการรวมให้อัตโนมัติทันที)
+echo  Processing complete! Countdown to close the window...
+echo  (If you drag and drop a new set of files now, it will merge them automatically)
 echo --------------------------------------------------
 
-:: ระบบนับถอยหลัง 10 วินาที
+:: 10-second countdown
 for /L %%i in (10,-1,1) do (
-    <nul set /p "=  ^> ปิดใน %%i วินาที...   "
+    <nul set /p "=  > Closing in %%i seconds...    "
     timeout /t 1 /nobreak >nul
 )
 
 echo.
-echo ปิดโปรแกรมเรียบร้อย ขอบคุณครับ!
+echo Program closed. Thank you!
