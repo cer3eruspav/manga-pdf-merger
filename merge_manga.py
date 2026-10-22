@@ -12,7 +12,7 @@ from PIL import Image, ImageChops
 from pdf2image import convert_from_path
 
 # ==========================================
-# กำหนด path ของ Poppler ที่คุณแตกไฟล์ไว้
+# Set Poppler path here
 # ==========================================
 POPPLER_PATH = r"D:\AI\Envs\poppler\Library\bin"
 CREDIT_MATCH_SIZE = (96, 128)
@@ -57,7 +57,7 @@ def load_credit_images(credit_dir):
                         img = _prepare_match_image(source)
                     credit_images.append(img)
                 except (OSError, ValueError) as e:
-                    print(f"[คำเตือน] ไม่สามารถโหลดภาพอ้างอิง {img_path}: {e}")
+                    print(f"[Warning] Failed to load reference image {img_path}: {e}")
     return credit_images
 
 def _prepare_match_image(image):
@@ -122,7 +122,7 @@ def remove_credit_pages(pdf_path, credit_images):
 
         if not pages_to_skip or len(pages_to_skip) == total_pages:
             if len(pages_to_skip) == total_pages:
-                print(f"[คำเตือน] ไม่ลบหน้าใดจาก {pdf_path}: ทุกหน้าตรงกับภาพอ้างอิง")
+                print(f"[Warning] No pages removed from {pdf_path}: All pages match reference images")
             return pdf_path, 0
 
         writer = PdfWriter()
@@ -141,7 +141,7 @@ def remove_credit_pages(pdf_path, credit_images):
 
         return temp_clean_pdf.name, len(pages_to_skip)
     except Exception as e:
-        print(f"[คำเตือน] ตรวจหาหน้าเครดิตใน {pdf_path} ไม่สำเร็จ; ใช้ไฟล์เดิม: {e}")
+        print(f"[Warning] Failed to check credit pages in {pdf_path}; using original file: {e}")
         return pdf_path, 0
 
 def get_available_output_path(output_path, input_files):
@@ -164,9 +164,9 @@ def write_and_validate_merge(files_to_merge, output_path):
     expected_page_count = sum(len(PdfReader(path).pages) for path in files_to_merge)
     expected_input_size = sum(os.path.getsize(path) for path in files_to_merge)
     if expected_page_count == 0:
-        raise ValueError("ไม่สามารถรวม PDF ที่ไม่มีหน้าได้")
+        raise ValueError("Cannot merge PDFs with zero pages")
     if expected_input_size == 0:
-        raise ValueError("ไฟล์ PDF ต้นทางว่างเปล่า")
+        raise ValueError("Source PDF files are empty")
 
     output_dir = os.path.dirname(output_path)
     temp_output = tempfile.NamedTemporaryFile(
@@ -182,21 +182,21 @@ def write_and_validate_merge(files_to_merge, output_path):
 
         output_size = os.path.getsize(temp_output.name)
         if output_size == 0:
-            raise ValueError("ไฟล์ PDF ผลลัพธ์ว่างเปล่า")
+            raise ValueError("Output PDF file is empty")
 
         with open(temp_output.name, 'rb') as output_file:
             actual_page_count = len(PdfReader(output_file).pages)
         if actual_page_count != expected_page_count:
             raise ValueError(
-                f"จำนวนหน้าในไฟล์ผลลัพธ์ไม่ตรงกัน "
-                f"(คาดว่า {expected_page_count}, ได้ {actual_page_count})"
+                f"Output page count mismatch "
+                f"(expected {expected_page_count}, got {actual_page_count})"
             )
 
         size_difference = abs(output_size - expected_input_size) / expected_input_size
         if size_difference > MERGE_SIZE_TOLERANCE:
             raise ValueError(
-                f"ขนาดไฟล์ผลลัพธ์ต่างจากขนาดรวมของ PDF ที่นำมารวม "
-                f"{size_difference:.1%} (ยอมรับได้ไม่เกิน "
+                f"Output file size differs from expected source size by "
+                f"{size_difference:.1%} (tolerance limit: "
                 f"{MERGE_SIZE_TOLERANCE:.0%})"
             )
 
@@ -228,18 +228,15 @@ def parse_manga_info(filename_full):
         parts = re.split(special_pattern, name_without_ext, flags=re.IGNORECASE)
         base_title = parts[0].strip().rstrip('-').strip()
     else:
-        # รูปแบบที่ 1: มีคำบอกตอน ไม่จำเป็นต้องมีขีดคั่น (แก้ปัญหาตาบอดแล้ว!)
         pattern1 = r'^(.*?)\s*(?:[-_]\s*)?(?:ตอนที่|ตอน|บทที่|เล่มที่|เล่ม|chapter|\bch\.?\b|episode|\bep\.?\b|round|\brd\.?\b|part|\bvol\.?\b|volume|section|act|book)\s*(\d+(?:\.\d+)?)(.*)$'
         match = re.search(pattern1, name_without_ext, re.IGNORECASE)
 
         if not match:
-            # รูปแบบที่ 2: ไม่มีคำบอกตอน แต่มีขีดคั่น
             pattern2 = r'^(.*?)\s*[-_]\s*(\d+(?:\.\d+)?)(.*)$'
             match = re.search(pattern2, name_without_ext, re.IGNORECASE)
 
         if not match:
-            # รูปแบบที่ 3: เว้นวรรคแล้วตามด้วยเลขตอนเลย
-            pattern3 = r'^(.*?)\s+(\d+(?:\.\d+)?)\s*(\[?จบ\]?)?$'
+            pattern3 = r'^(.*?)\s+(\d+(?:\.\d+)?)\s*(\[?(?:จบ|end)\]?)?$'
             match = re.search(pattern3, name_without_ext, re.IGNORECASE)
 
         if match:
@@ -250,15 +247,13 @@ def parse_manga_info(filename_full):
             if ep_str:
                 ep_num = float(ep_str)
 
-            sub_title = re.sub(r'\[?\s*จบ\s*\]?', '', raw_sub).strip().lstrip('-').strip()
+            sub_title = re.sub(r'\[?\s*(?:จบ|end)\s*\]?', '', raw_sub, flags=re.IGNORECASE).strip().lstrip('-').strip()
         else:
-            # กรณีฉุกเฉินสุดๆ หาตัวเลขชุดสุดท้ายในชื่อไฟล์เพื่อป้องกันการเป็น 0
             nums = re.findall(r'\d+(?:\.\d+)?', name_without_ext)
             if nums:
                 ep_num = float(nums[-1])
                 base_title = re.sub(str(nums[-1]) + r'.*$', '', base_title).strip().rstrip('-').strip()
 
-    # จัดการชื่อผู้เขียน [...]
     author_match = re.match(r'^(\s*\[[^\]]+\])', base_title)
     author_prefix = author_match.group(1).strip() if author_match else ""
 
@@ -274,20 +269,19 @@ def parse_manga_info(filename_full):
     base_title = re.sub(r'\(\s+', '(', base_title)
     base_title = re.sub(r'\s+', ' ', base_title).strip()
 
-    # ล้างขยะท้ายชื่ออีกหนึ่งรอบ ป้องกันขีดหรือคำตกค้าง
     base_title = re.sub(r'\s+(?:ตอนที่|ตอน|chapter|ep)\s*$', '', base_title, flags=re.IGNORECASE).strip().rstrip('-').strip()
 
     return base_title, ep_num, is_special, sub_title
 
 def merge_manga():
     if len(sys.argv) < 2:
-        print("กรุณาลากไฟล์ PDF มาวางบน Script")
+        print("Please drag and drop PDF files onto the script.")
         return
 
     input_files = [f for f in sys.argv[1:] if os.path.exists(f) and f.lower().endswith('.pdf')]
 
     if not input_files:
-        print("[ข้อผิดพลาด]: ไม่พบไฟล์ PDF ที่ถูกต้อง")
+        print("[Error]: No valid PDF files found.")
         return
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -317,7 +311,7 @@ def merge_manga():
     total_input_size = 0
     total_deleted_credits = 0
 
-    print("กำลังตรวจสอบและรวมไฟล์ด้วยระบบอัจฉริยะ...")
+    print("Inspecting and merging files...")
 
     files_to_merge = []
     temp_files_to_clean = []
@@ -331,7 +325,7 @@ def merge_manga():
         sub_title = item['sub_title']
         filename_lower = item['filename'].lower()
 
-        if "จบ" in filename_lower or is_sp:
+        if "จบ" in filename_lower or "end" in filename_lower or is_sp:
             is_finished = True
 
         if is_sp:
@@ -350,7 +344,7 @@ def merge_manga():
         should_create_sep = False
         if is_sp:
             should_create_sep = True
-            sep_text = "ตอนพิเศษ"
+            sep_text = "Special"
             if sub_title:
                 sep_text += f" : {sub_title}"
         else:
@@ -363,10 +357,8 @@ def merge_manga():
             if should_create_sep:
                 ep_display = int(current_ep) if current_ep.is_integer() else current_ep
 
-                prefix_label = "ตอนที่"
-                if "chapter" in filename_lower or re.search(r'\bch\.?\b', filename_lower):
-                    prefix_label = "Chapter"
-                elif "episode" in filename_lower or re.search(r'\bep\.?\b', filename_lower):
+                prefix_label = "Chapter"
+                if "episode" in filename_lower or re.search(r'\bep\.?\b', filename_lower):
                     prefix_label = "Episode"
                 elif "round" in filename_lower or re.search(r'\brd\.?\b', filename_lower):
                     prefix_label = "Round"
@@ -375,8 +367,8 @@ def merge_manga():
                 elif "vol" in filename_lower or "volume" in filename_lower:
                     prefix_label = "Vol"
 
-                if current_ep == 0.0 and not any(kw in filename_lower for kw in ["chapter", "ep", "round", "part", "vol", "ตอนที่", "บทที่", "ตอน"]):
-                    sep_text = "บทนำ"
+                if current_ep == 0.0 and not any(kw in filename_lower for kw in ["chapter", "ch", "ep", "round", "part", "vol", "ตอนที่", "บทที่", "ตอน"]):
+                    sep_text = "Prologue"
                 else:
                     sep_text = f"{prefix_label} {ep_display}"
 
@@ -397,17 +389,14 @@ def merge_manga():
         except Exception:
             pass
 
-    # ระบบสร้างชื่อไฟล์ผลลัพธ์ ควบคุมความเป๊ะ
     ep_str = ""
     if ep_numbers:
         min_ep = min(ep_numbers)
         max_ep = max(ep_numbers)
 
-        prefix_label = "ตอนที่"
+        prefix_label = "Chapter"
         sample_fn = file_info_list[0]['filename'].lower()
-        if "chapter" in sample_fn or re.search(r'\bch\.?\b', sample_fn):
-            prefix_label = "Chapter"
-        elif "episode" in sample_fn or re.search(r'\bep\.?\b', sample_fn):
+        if "episode" in sample_fn or re.search(r'\bep\.?\b', sample_fn):
             prefix_label = "Episode"
         elif "round" in sample_fn or re.search(r'\brd\.?\b', sample_fn):
             prefix_label = "Round"
@@ -426,23 +415,23 @@ def merge_manga():
 
     if has_special:
         if ep_str:
-            ep_str += "+พิเศษ"
+            ep_str += "+Special"
         else:
-            ep_str = "ตอนพิเศษ"
+            ep_str = "Special"
         is_finished = True
 
     if is_finished:
-        if not ep_str.endswith("[จบ]"):
-            ep_str += "[จบ]"
+        if not ep_str.endswith("[END]") and not ep_str.endswith("[จบ]"):
+            ep_str += " [END]"
 
     if not ep_str:
-        ep_str = "[จบ]"
+        ep_str = " [END]"
 
     output_filename = f"{base_title} {ep_str}.pdf"
     output_path = os.path.join(os.path.dirname(input_files[0]), output_filename)
     output_path = get_available_output_path(output_path, input_files)
 
-    print(f"\nกำลังรวมการ์ตูน: {os.path.basename(output_path)}...")
+    print(f"\nMerging manga: {os.path.basename(output_path)}...")
 
     is_success = False
     try:
@@ -451,24 +440,24 @@ def merge_manga():
         )
         is_success = True
     except Exception as e:
-        print(f"\n[เกิดข้อผิดพลาด]: {e}")
+        print(f"\n[Error]: {e}")
 
     for tmp in temp_files_to_clean:
         try:
             os.remove(tmp)
         except Exception as e:
-            print(f"[คำเตือน] ลบไฟล์ชั่วคราว {tmp} ไม่สำเร็จ: {e}")
+            print(f"[Warning] Failed to delete temporary file {tmp}: {e}")
 
     if is_success:
-        print(f"\nรวมไฟล์สำเร็จ! บันทึกที่: {output_path}")
+        print(f"\nMerge successful! Saved to: {output_path}")
         print(
-            f"ตรวจสอบแล้ว {output_page_count} หน้า | "
-            f"ขนาดต้นฉบับรวม {total_input_size:,} bytes | "
-            f"ขนาด PDF ที่นำมารวม {merge_input_size:,} bytes | "
-            f"ขนาดผลลัพธ์ {output_size:,} bytes "
-            f"(ต่าง {abs(output_size - merge_input_size) / merge_input_size:.1%})"
+            f"Verified {output_page_count} pages | "
+            f"Total original size: {total_input_size:,} bytes | "
+            f"Merged PDF size: {merge_input_size:,} bytes | "
+            f"Output size: {output_size:,} bytes "
+            f"(diff: {abs(output_size - merge_input_size) / merge_input_size:.1%})"
         )
-        print(f"กำลังย้ายไฟล์ต้นฉบับไปถังขยะ...")
+        print(f"Moving original files to trash...")
         failed_trash = []
         for item in file_info_list:
             try:
@@ -476,11 +465,11 @@ def merge_manga():
             except OSError as e:
                 failed_trash.append((item['path'], e))
         if failed_trash:
-            print("[คำเตือน] รวมไฟล์สำเร็จ แต่ย้ายไฟล์ต้นฉบับบางไฟล์ไปถังขยะไม่สำเร็จ:")
+            print("[Warning] Merge successful, but failed to move some original files to trash:")
             for path, error in failed_trash:
                 print(f"  {path}: {error}")
     else:
-        print(f"\n[ระบบความปลอดภัย]: การรวมไฟล์ล้มเหลว ยกเลิกการลบไฟล์ต้นฉบับ")
+        print(f"\n[Safety System]: Merge failed. Canceled deletion of original files.")
 
 if __name__ == "__main__":
     merge_manga()
