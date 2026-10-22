@@ -6,6 +6,7 @@ A command-line tool to sort PDF files by chapter numbers, remove known credit pa
 
 ## Features
 
+- Drag-and-drop integration: Supports dragging PDF files onto run.bat (or its shortcut) for quick execution.
 - Sorts files by chapter numbers parsed from filenames and inserts chapter separator pages.
 - Compares every page in the PDF against reference images, including those inside subfolders of `credit_images`.
 - Automatically removes pages that match reference images before merging.
